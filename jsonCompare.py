@@ -31,7 +31,7 @@ def getObjectDifferences(object1, object2, fileName1, fileName2):
 
 
     return differences
-
+#TODO: Break into type based list, then compare
 def getListDifferences(list1, list2, fileName1, fileName2):
     differences = []
 
@@ -41,18 +41,19 @@ def getListDifferences(list1, list2, fileName1, fileName2):
     list2.sort(key=keyFunction)
 
     for i in range(len(list1)):
-        # Recursion if item is dict
-        if isinstance(list1[i], dict) and isinstance(list2[i], dict):
-            itemDiff = getObjectDifferences(list1[i], list2[i], fileName1, fileName2)
+        if list1[i] != list2[i]:
+            # Recursion if item is dict
+            if isinstance(list1[i], dict) and isinstance(list2[i], dict):
+                itemDiff = getObjectDifferences(list1[i], list2[i], fileName1, fileName2)
 
-        # Recursion if item is list
-        elif isinstance(list1[i], list) and isinstance(list2[i], list):
-            itemDiff = getListDifferences(list1[i], list2[i], fileName1, fileName2)
-        else:
-            itemDiff = {fileName1: list1[i], fileName2: list2[i]}
+            # Recursion if item is list
+            elif isinstance(list1[i], list) and isinstance(list2[i], list):
+                itemDiff = getListDifferences(list1[i], list2[i], fileName1, fileName2)
+            else:
+                itemDiff = {fileName1: list1[i], fileName2: list2[i]}
 
-        if itemDiff:
-            differences.append(itemDiff)
+            if itemDiff:
+                differences.append(itemDiff)
 
     return differences;
 
