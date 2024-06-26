@@ -8,7 +8,7 @@ def getObjectDifferences(object1, object2, fileName1, fileName2):
     for key, value in object1.items():
         # Check if object2 contains same key as object1
         if key not in object2:
-            differences[key] = f"Missing in {fileName2}"
+            differences[key] = {fileName1 : value, fileName2: "***NOT FOUND***"}
 
         # Check if both values are equal
         elif object1[key] != object2[key]:
@@ -17,6 +17,7 @@ def getObjectDifferences(object1, object2, fileName1, fileName2):
             if isinstance(object1[key], dict) and isinstance(object2[key], dict):
                 differences[key] = getObjectDifferences(object1[key], object2[key], fileName1, fileName2)
 
+            # Recursion if item is list
             elif isinstance(object1[key], list) and isinstance(object2[key], list):
                differences[key] = getListDifferences(object1[key], object2[key], fileName1, fileName2);
 
@@ -26,7 +27,7 @@ def getObjectDifferences(object1, object2, fileName1, fileName2):
     for key, value in object2.items():
         if key not in differences:
             if key not in object1:
-                differences[key] = f"Missing in {fileName1}"
+                differences[key] = {fileName1 : "***NOT FOUND***", fileName2: value}
 
 
     return differences
@@ -36,17 +37,38 @@ def getListDifferences(list1, list2, fileName1, fileName2):
 
     if(len(list1) != len(list2)):
         return {fileName1 : list1, fileName2 : list2};
-
-    list1.sort();
-    list2.sort();
+    list1.sort(key=keyFunction)
+    list2.sort(key=keyFunction)
 
     for i in range(len(list1)):
+        # Recursion if item is dict
         if isinstance(list1[i], dict) and isinstance(list2[i], dict):
-            differences.append(getObjectDifferences(list1[i], list2[i], fileName1, fileName2))
+            itemDiff = getObjectDifferences(list1[i], list2[i], fileName1, fileName2)
+
+        # Recursion if item is list
+        elif isinstance(list1[i], list) and isinstance(list2[i], list):
+            itemDiff = getListDifferences(list1[i], list2[i], fileName1, fileName2)
         else:
-            differences.append({fileName1: list1[i], fileName2: list2[i]});
+            itemDiff = {fileName1: list1[i], fileName2: list2[i]}
+
+        if itemDiff:
+            differences.append(itemDiff)
 
     return differences;
+
+def keyFunction(item):
+    if isinstance(item, dict):
+        if not item:
+            return "{}"
+        dict(sorted(item.items()))
+        return list(item.keys())[0]
+    elif isinstance(item, list):
+        if not item:
+            return "[]"
+        sorted(item, key=keyFunction)
+        return item[0]
+    else:
+        return str(item)
 
 if __name__ == "__main__":
 
@@ -59,4 +81,8 @@ if __name__ == "__main__":
         object2 = json.loads(f2.read())
 
     result = getObjectDifferences(object1, object2, fileName1, fileName2)
-    print(json.dumps(result, indent=4))
+
+    if not result:
+        print(f"Contents of {fileName1} and {fileName2} are identical")
+    else:
+        print(json.dumps(result, indent=4))
